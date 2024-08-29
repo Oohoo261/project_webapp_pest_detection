@@ -66,8 +66,6 @@
                         <th>Name</th>
                         <th>Confidence</th>
                         <th>Timestamp</th>
-                        <th>True Positive</th>
-                        <th>False Positive</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -78,8 +76,6 @@
                         <td>{{ row[1] }}</td>
                         <td>{{ row[2] }}</td>
                         <td>{{ row[3] }}</td>
-                        <td>{{ row[4] }}</td>
-                        <td>{{ row[5] }}</td>
                         <td>
                             <form action="{{ url_for('delete_detection') }}" method="POST" style="display: inline;">
                                 <input type="hidden" name="id" value="{{ row[0] }}">

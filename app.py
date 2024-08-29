@@ -9,7 +9,7 @@ import torch
 app = Flask(__name__, template_folder="templates")
 
 # Load YOLOv5 model
-model = torch.hub.load('ultralytics/yolov5', 'custom', path='best.pt')
+model = torch.hub.load('ultralytics/yolov5', 'custom', path='yolov5/runs/train/exp2/weights/best.pt')
 
 classNames = ['Atlas-moth', 'Black-Grass-Caterpillar', 'Coconut-black-headed-caterpillar', 'Common cutworm', 'Cricket', 'Diamondback-moth',
          'Fall-Armyworm', 'Grasshopper', 'Green-weevil', 'Leaf-eating-caterpillar', 'Oriental-Mole-Cricket', 'Oriental-fruit-fly',
@@ -26,11 +26,16 @@ def check_schema():
     for column in columns:
         print(column)
 
-check_schema()
-
 def update_schema():
     conn = sqlite3.connect('databasev5.db')
     cursor = conn.cursor()
+    
+    # Check if the old table exists
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='detections'")
+    if cursor.fetchone() is None:
+        print("Table 'detections' does not exist. Skipping schema update.")
+        conn.close()
+        return
     
     # Create a new table with the updated schema
     cursor.execute('''
@@ -38,9 +43,7 @@ def update_schema():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             confident REAL NOT NULL,
-            timestamp INTEGER NOT NULL,
-            true_positive INTEGER DEFAULT 0,
-            false_positive INTEGER DEFAULT 0
+            timestamp INTEGER NOT NULL
         )
     ''')
     
@@ -60,8 +63,6 @@ def update_schema():
     conn.commit()
     conn.close()
 
-update_schema()
-
 def create_database():
     conn = sqlite3.connect('databasev5.db')
     cursor = conn.cursor()
@@ -69,24 +70,19 @@ def create_database():
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         name TEXT NOT NULL,
                         confident REAL NOT NULL,
-                        timestamp INTEGER NOT NULL,
-                        true_positive INTEGER DEFAULT 0,
-                        false_positive INTEGER DEFAULT 0
+                        timestamp INTEGER NOT NULL
                       )''')
     conn.commit()
     conn.close()
 
-
-def insert_detection(name, confident, timestamp, true_positive=0, false_positive=0):
+def insert_detection(name, confident, timestamp):
     conn = sqlite3.connect('databasev5.db')
     cursor = conn.cursor()
     current_timestamp = time.strftime('%H:%M:%S')  # Format time as hours:minutes:seconds
-    cursor.execute("INSERT INTO detections (name, confident, timestamp, true_positive, false_positive) VALUES (?, ?, ?, ?, ?)",
-                   (name, confident, current_timestamp, true_positive, false_positive))
+    cursor.execute("INSERT INTO detections (name, confident, timestamp) VALUES (?, ?, ?)",
+                   (name, confident, current_timestamp))
     conn.commit()
     conn.close()
-
-
 
 def fetch_data_from_database():
     conn = sqlite3.connect('databasev5.db')
@@ -161,13 +157,8 @@ def detect_objects(frame):
             cv2.putText(frame, label, (x1, y1 - 2), 0, 1, [255, 255, 255], thickness=1, lineType=cv2.LINE_AA)
             detections.append((class_name, conf, timestamp))
 
-            # Modify based on your criteria for true positive or false positive
-            true_positive = 1  # Set as needed
-            false_positive = 0  # Set as needed
-
-            insert_detection(class_name, conf, timestamp, true_positive, false_positive)
+            insert_detection(class_name, conf, timestamp)  # Removed true_positive and false_positive
     return frame, detections
-
 
 def generate_frames():
     cap = cv2.VideoCapture(0)
@@ -274,6 +265,8 @@ def mark_notification_as_read(notification_id):
     conn.close()
 
 if __name__ == '__main__':
+    create_database()  # Ensure the database and table are created first
+    update_schema()    # Update the schema
     if not os.path.exists('uploads'):
         os.makedirs('uploads')
     app.run(debug=True)
