@@ -54,7 +54,7 @@
 <body>
     <div class="navbar">
         <a href="{{ url_for('index') }}">Real-Time Camera Detection</a>
-        <a href="{{ url_for('upload') }}" class="button-color">Image/Video Detection</a>
+        <a href="{{ url_for('upload') }}" class="button-color">Image Detection</a>
         <a href="{{ url_for('data') }}">View Data Detected</a>
         <a href="{{ url_for('notifications') }}" class="notification-button">
             Notifications (<span id="notification-count">0</span>)
@@ -63,7 +63,7 @@
     </div>
     <div class="container">
         <div class="upload-section">
-            <h1>Upload Image or Video</h1>
+            <h1>Upload Image</h1>
             <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
                 <input type="file" name="file" accept="image/*,video/*" required onchange="previewFile()">
                 <button type="submit">Upload</button>
@@ -71,15 +71,8 @@
             <div id="preview-container">
                 <h2>Preview:</h2>
                 <div class="upload-frame">
-                    {% if file_url %}
-                        {% if file_url.endswith(('png', 'jpg', 'jpeg')) %}
-                            <img src="{{ file_url }}" id="image-preview" style="max-width: 100%; height: auto;">
-                        {% elif file_url.endswith(('mp4', 'avi')) %}
-                            <video id="video-preview" controls style="max-width: 100%; height: auto;">
-                                <source src="{{ file_url }}" type="video/{{ file_url.rsplit('.', 1)[1].lower() }}">
-                                Your browser does not support the video tag.
-                            </video>
-                        {% endif %}
+                    {% if file_path %}
+                        <img src="{{ url_for('static', filename='detected.jpg') }}" id="image-preview" style="max-width: 100%; height: auto;">
                     {% else %}
                         <img id="image-preview" style="max-width: 100%; height: auto; display: none;">
                         <video id="video-preview" controls style="max-width: 100%; height: auto; display: none;">

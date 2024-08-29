@@ -191,6 +191,20 @@ def index():
 def video_feed():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
+def analyze_image(image_path):
+    frame = cv2.imread(image_path)
+    frame, detections = detect_objects(frame)
+    
+    # สร้างชื่อไฟล์สำหรับภาพที่ตรวจจับแล้ว
+    detected_image_path = os.path.join('static', 'detected.jpg')
+    cv2.imwrite(detected_image_path, frame)
+    
+    # ลบภาพเดิม
+    os.remove(image_path)
+    
+    return detected_image_path, detections
+
+
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
@@ -198,31 +212,12 @@ def upload():
         if file:
             file_path = os.path.join('uploads', file.filename)
             file.save(file_path)
-            detections = []
-            if file.filename.lower().endswith(('png', 'jpg', 'jpeg')):
-                detections = analyze_image(file_path)
-            elif file.filename.lower().endswith(('mp4', 'avi')):
-                detections = analyze_video(file_path)
-            return render_template('upload.html', file_path=file_path, detections=detections)
+            
+            # ตรวจจับและบันทึกภาพที่ตรวจจับแล้ว
+            detected_file_path, detections = analyze_image(file_path)
+            
+            return render_template('upload.html', file_path='detected.jpg', detections=detections)
     return render_template('upload.html')
-
-def analyze_image(image_path):
-    frame = cv2.imread(image_path)
-    frame, detections = detect_objects(frame)
-    cv2.imwrite(image_path, frame)
-    return detections
-
-def analyze_video(video_path):
-    cap = cv2.VideoCapture(video_path)
-    detections = []
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-        frame, frame_detections = detect_objects(frame)
-        detections.extend(frame_detections)
-    cap.release()
-    return detections
 
 #notification
 
