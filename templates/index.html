@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        function updateNotificationCount() {
+            fetch('{{ url_for("notification_count") }}')
+                .then(response => response.text())
+                .then(count => {
+                    document.getElementById('notification-count').innerText = count;
+                })
+                .catch(error => console.error('Error fetching notification count:', error));
+        }
+
+        // Update the notification count every 5 seconds
+        setInterval(updateNotificationCount, 5000);
+
+        // Initial update when the page loads
+        window.onload = updateNotificationCount;
+    </script>
+</head>
+<body>
+    <div class="navbar">
+        <a href="{{ url_for('index') }}" class="button-color">Real-Time Camera Detection</a>
+        <a href="{{ url_for('upload') }}">Image/Video Detection</a>
+        <a href="{{ url_for('data') }}">View Data Detected</a>
+        <a href="{{ url_for('notifications') }}" class="notification-button">
+            Notifications (<span id="notification-count">0</span>)
+        </a>
+        <a href="https://forms.gle/gA5Q2Q9VUpmbPFDCA" target="_blank" class="button-color">แบบประเมิน</a> <!-- ปุ่มแบบประเมิน -->
+    </div>
+    <div class="container">
+        <div class="camera-feed">
+            <h1>Detection Cam</h1>
+            <div class="camera-frame">
+                <img src="{{ url_for('video_feed') }}?{{ random }}" width="1200" height="960" style="object-fit: cover;">
+            </div>
+        </div>
+        <div class="detections-list">
+            <h2>Detections:</h2>
+            <div class="detections-table">
+                <ul>
+                    {% for detection in detections %}
+                    <li>
+                        <span class="detection-name">{{ detection[1] }}</span> - 
+                        <span class="confidence">Confidence: {{ detection[2] }}</span> - 
+                        <span class="timestamp">Timestamp: {{ detection[3] }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

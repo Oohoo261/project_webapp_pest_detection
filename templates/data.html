@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles-data.css') }}">
+    <script>
+        function updateNotificationCount() {
+            fetch('{{ url_for("notification_count") }}')
+                .then(response => response.text())
+                .then(count => {
+                    document.getElementById('notification-count').innerText = count;
+                })
+                .catch(error => console.error('Error fetching notification count:', error));
+        }
+
+        // Update the notification count every 5 seconds
+        setInterval(updateNotificationCount, 5000);
+
+        // Initial update when the page loads
+        window.onload = updateNotificationCount;
+
+        function deleteRow(id) {
+            fetch('{{ url_for("delete_detection") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id: id }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('row-' + id).remove();
+                } else {
+                    alert('Error deleting row');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</head>
+<body>
+    <div class="navbar">
+        <a href="{{ url_for('index') }}">Real-Time Camera Detection</a>
+        <a href="{{ url_for('upload') }}">Image/Video Detection</a>
+        <a href="{{ url_for('data') }}" class="button-color">View Data Detected</a>
+        <a href="{{ url_for('notifications') }}" class="notification-button">
+            Notifications (<span id="notification-count">0</span>)
+        </a>
+        <a href="https://forms.gle/gA5Q2Q9VUpmbPFDCA" target="_blank" class="button-color">แบบประเมิน</a> <!-- ปุ่มแบบประเมิน -->
+    </div>
+    <div class="container">
+        <div class="data-section">
+            <div class="header-section">
+                <h1>Detection Data</h1>
+                <!-- Delete All button -->
+                <form action="{{ url_for('delete_all_detections') }}" method="POST" class="delete-all-form">
+                    <button type="submit" class="delete-button">Delete All</button>
+                </form>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Confidence</th>
+                        <th>Timestamp</th>
+                        <th>True Positive</th>
+                        <th>False Positive</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                    <tr id="row-{{ row[0] }}">
+                        <td>{{ row[0] }}</td>
+                        <td>{{ row[1] }}</td>
+                        <td>{{ row[2] }}</td>
+                        <td>{{ row[3] }}</td>
+                        <td>{{ row[4] }}</td>
+                        <td>{{ row[5] }}</td>
+                        <td>
+                            <form action="{{ url_for('delete_detection') }}" method="POST" style="display: inline;">
+                                <input type="hidden" name="id" value="{{ row[0] }}">
+                                <button type="submit" class="delete-button">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        function updateNotificationCount() {
+    fetch('{{ url_for("notification_count") }}')
+        .then(response => response.text())
+        .then(count => {
+            document.getElementById('notification-count').innerText = count;
+        })
+        .catch(error => console.error('Error fetching notification count:', error));
+    }
+
+        // Update the notification count every 5 seconds
+        setInterval(updateNotificationCount, 5000);
+
+        // Initial update when the page loads
+        window.onload = updateNotificationCount;
+
+        function deleteRow(id) {
+            fetch('{{ url_for("delete_detection") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id: id }),
+        })
+        .then(response => {
+            if (response.ok) {
+                document.getElementById('row-' + id).remove();
+            } else {
+                alert('Error deleting row');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+    </script>
+</body>
+</html>

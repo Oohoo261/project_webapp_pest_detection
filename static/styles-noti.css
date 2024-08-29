@@ -1,0 +1,183 @@
+/* Reset default browser styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Apply some basic styling to the body */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #f4f4f4;
+    padding: 20px;
+}
+
+/* Style the navigation bar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #86c97e;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.navbar a {
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.navbar a:hover {
+    background-color: #6baa66;
+}
+
+/* Layout the container with notifications section */
+.container {
+    margin-top: 60px; /* Add margin-top to prevent overlap with fixed navbar */
+}
+
+/* Style the notifications section */
+.notifications-section {
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 100%; /* เพิ่มความกว้าง */
+    margin: 0 auto; /* จัดกึ่งกลาง */
+}
+
+/* Style the notifications table */
+.notifications-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    border: 1px solid #ddd;
+}
+
+.notifications-table th,
+.notifications-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.notifications-table th {
+    background-color: #007bff;
+    color: #fff;
+    font-weight: bold;
+}
+
+.notifications-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.notifications-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.notifications-table td {
+    color: #333;
+}
+
+/* Style the notification button */
+.notification-button {
+    background-color: #28a745; /* ใช้สีเขียวเดียวกับใน styles.css */
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.notification-button:hover {
+    background-color: #0056b3; /* Darker blue */
+}
+
+.notification-button span {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* Make the notification section responsive */
+@media (max-width: 600px) {
+    .navbar {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .notifications-section {
+        padding: 10px;
+    }
+
+    .notifications-table td,
+    .notifications-table th {
+        font-size: 14px;
+    }
+}
+
+.notification-container {
+    padding: 20px;
+    background-color: #e4f5e8; /* สีพื้นหลัง */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 2000px;
+    margin: 0 auto;
+}
+
+.notification-item {
+    background-color: #5cb85c; /* สีเขียวเข้มของบาร์ */
+    color: white;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    border: 1px solid black; /* เส้นขอบ */
+    width: 100%; /* เพิ่มความกว้างให้เต็ม container */
+}
+
+.notification-item > div:first-child {
+    flex: 1; /* ให้ข้อความหลักกินพื้นที่ */
+}
+
+.notification-item .time {
+    font-size: 14px;
+    color: #333;
+    margin-right: 15px; /* เพิ่มช่องว่างระหว่างเวลาและปุ่ม */
+}
+
+.notification-button {
+    background-color: #28a745;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 5px;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.notification-button:hover {
+    background-color: #4cae4c;
+}
+
+.notification-item .time {
+    font-size: 14px;
+    color: #333;
+}
+
+.empty-state {
+    text-align: center;
+    color: #888;
+    margin-top: 20px;
+    font-size: 18px;
+}

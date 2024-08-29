@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        function updateNotificationCount() {
+            fetch('{{ url_for("notification_count") }}')
+                .then(response => response.text())
+                .then(count => {
+                    document.getElementById('notification-count').innerText = count;
+                })
+                .catch(error => console.error('Error fetching notification count:', error));
+        }
+
+        // Update the notification count every 5 seconds
+        setInterval(updateNotificationCount, 5000);
+
+        // Initial update when the page loads
+        window.onload = updateNotificationCount;
+
+        function previewFile() {
+            const file = document.querySelector('input[type=file]').files[0];
+            const imgPreview = document.getElementById('image-preview');
+            const videoPreview = document.getElementById('video-preview');
+            const videoSource = document.getElementById('video-source');
+            const reader = new FileReader();
+
+            if (file) {
+                if (file.type.startsWith('image/')) {
+                    videoPreview.style.display = 'none';
+                    imgPreview.style.display = 'block';
+
+                    reader.onload = function (e) {
+                        imgPreview.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                } else if (file.type.startsWith('video/')) {
+                    imgPreview.style.display = 'none';
+                    videoPreview.style.display = 'block';
+
+                    reader.onload = function (e) {
+                        videoSource.src = e.target.result;
+                        videoPreview.load(); // Load the video after setting the source
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="navbar">
+        <a href="{{ url_for('index') }}">Real-Time Camera Detection</a>
+        <a href="{{ url_for('upload') }}" class="button-color">Image/Video Detection</a>
+        <a href="{{ url_for('data') }}">View Data Detected</a>
+        <a href="{{ url_for('notifications') }}" class="notification-button">
+            Notifications (<span id="notification-count">0</span>)
+        </a>
+        <a href="https://forms.gle/gA5Q2Q9VUpmbPFDCA" target="_blank" class="button-color">แบบประเมิน</a> <!-- ปุ่มแบบประเมิน -->
+    </div>
+    <div class="container">
+        <div class="upload-section">
+            <h1>Upload Image or Video</h1>
+            <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+                <input type="file" name="file" accept="image/*,video/*" required onchange="previewFile()">
+                <button type="submit">Upload</button>
+            </form>
+            <div id="preview-container">
+                <h2>Preview:</h2>
+                <div class="upload-frame">
+                    {% if file_url %}
+                        {% if file_url.endswith(('png', 'jpg', 'jpeg')) %}
+                            <img src="{{ file_url }}" id="image-preview" style="max-width: 100%; height: auto;">
+                        {% elif file_url.endswith(('mp4', 'avi')) %}
+                            <video id="video-preview" controls style="max-width: 100%; height: auto;">
+                                <source src="{{ file_url }}" type="video/{{ file_url.rsplit('.', 1)[1].lower() }}">
+                                Your browser does not support the video tag.
+                            </video>
+                        {% endif %}
+                    {% else %}
+                        <img id="image-preview" style="max-width: 100%; height: auto; display: none;">
+                        <video id="video-preview" controls style="max-width: 100%; height: auto; display: none;">
+                            <source id="video-source" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="detections-list">
+            <h2>Detections:</h2>
+            <div class="detections-table">
+                <ul>
+                    {% for detection in detections %}
+                    <li>
+                        <span class="detection-name">{{ detection[0] }}</span> - 
+                        <span class="confidence">Confidence: {{ detection[1] }}</span> - 
+                        <span class="timestamp">Timestamp: {{ detection[2] }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

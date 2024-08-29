@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles-noti.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <!-- Navigation bar -->
+    <div class="navbar">
+        <a href="{{ url_for('index') }}" class="button-color">Real-Time Camera Detection</a>
+        <a href="{{ url_for('upload') }}">Image/Video Detection</a>
+        <a href="{{ url_for('notifications') }}" class="notification-button">
+            Notifications (<span id="notification-count">0</span>)
+        </a>
+        <a href="https://forms.gle/gA5Q2Q9VUpmbPFDCA" target="_blank" class="button-color">แบบประเมิน</a> <!-- ปุ่มแบบประเมิน -->
+    </div>
+
+    <div class="container">
+        <h1>Notifications</h1>
+        <div class="notifications-section">
+            {% if notifications %}
+            <div class="notification-container">
+                {% for notification in notifications %}
+                <div class="notification-item" id="notification-{{ notification[0] }}">
+                    <div>
+                        {{ notification[1] }} - Confidence: {{ notification[2] }}
+                    </div>
+                    <div class="time">
+                        Time: {{ notification[3] }}  <!-- แสดงเวลาในรูปแบบ ชั่วโมง:นาที:วินาที -->
+                    </div>
+                    <button class="notification-button" onclick="markAsRead({{ notification[0] }})">
+                        Mark as read
+                    </button>
+                </div>                
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-state">No notifications.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+        function updateNotificationCount() {
+            fetch('{{ url_for("notification_count") }}')
+                .then(response => response.text())
+                .then(count => {
+                    document.getElementById('notification-count').innerText = count;
+                })
+                .catch(error => console.error('Error fetching notification count:', error));
+        }
+
+        // Update the notification count every 5 seconds
+        setInterval(updateNotificationCount, 5000);
+
+        // Initial update when the page loads
+        window.onload = updateNotificationCount;
+        
+        function markAsRead(notificationId) {
+            $.ajax({
+                url: "{{ url_for('mark_read') }}",
+                type: "POST",
+                data: {notification_id: notificationId},
+                success: function(response) {
+                    // ลบ notification-item จาก DOM
+                    $('#notification-' + notificationId).remove();
+                    // เปลี่ยนเส้นทางไปยังหน้า data.html
+                    window.location.href = "{{ url_for('data') }}";
+                },
+                error: function(xhr) {
+                    alert('Error marking notification as read');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

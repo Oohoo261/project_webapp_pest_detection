@@ -1,0 +1,223 @@
+/* Reset default browser styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Apply some basic styling to the body */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #e4f5e8;
+    padding: 20px;
+}
+
+/* Style the navigation bar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #86c97e;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.navbar a {
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.navbar a:hover {
+    background-color: #6baa66;
+}
+
+/* Notification button styling */
+.notification-button {
+    background-color: #ff4747;
+}
+
+.notification-button:hover {
+    background-color: #e03d3d;
+}
+
+/* Layout the container with camera feed and detections list */
+.container {
+    display: flex;
+    justify-content: space-between; /* จัดตำแหน่งซ้ายขวา */
+    gap: 20px; /* เพิ่มช่องว่างระหว่างส่วน */
+}
+
+/* Style the camera feed section */
+.camera-feed {
+    flex-grow: 2;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.camera-frame {
+    border: 5px solid #4CAF50;
+    border-radius: 10px;
+    overflow: hidden;
+    width: 100%;  
+    height: 700px; /* เพิ่มความสูงจาก 600px เป็น 700px */
+}
+
+.camera-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; 
+}
+
+/* Style the detections list section */
+.detections-list {
+    flex-basis: 25%;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.detections-list h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+.detections-table {
+    max-height: 700px; /* เพิ่มความสูงจากเดิม 400px เป็น 600px */
+    overflow-y: auto;  /* ยังคงการเลื่อนสำหรับข้อมูลที่เกิน */
+}
+
+ul {
+    list-style-type: none;
+}
+
+li {
+    background-color: #f9f9f9;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+
+
+/* Style the detection name */
+.detection-name {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Style the confidence */
+.confidence {
+    color: #007bff; /* Blue color */
+}
+
+/* Style the timestamp */
+.timestamp {
+    color: #6c757d; /* Gray color */
+}
+
+/* Button styles */
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    margin-top: 20px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+/* Specific table styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 10px;
+    text-align: center;
+}
+
+th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+tr:hover {
+    background-color: #ddd;
+}
+
+/* Adjust layout for smaller screens */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .detections-list {
+        flex-basis: 100%;
+        margin-top: 20px;
+    }
+}
+
+.button-color {
+    background-color: #28a745; /* ใช้สีเขียวเดียวกับใน styles.css */
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* กรอบการแสดงผล (preview frame) */
+.upload-frame {
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    width: 100%;
+    max-height: 600px; /* ปรับความสูงตามที่คุณต้องการ */
+    margin: 0 auto; /* ทำให้กรอบการแสดงผลอยู่กลางหน้าจอ */
+    background-color: #fff;
+    display: flex;
+    justify-content: center; /* จัดตำแหน่งให้กลางแนวนอน */
+    align-items: center; /* จัดตำแหน่งให้กลางแนวตั้ง */
+    position: relative; /* ใช้ตำแหน่ง relative เพื่อควบคุมการจัดตำแหน่ง */
+}
+
+.upload-section {
+    flex-grow: 2; /* เพิ่มความยืดหยุ่นของส่วนนี้ในคอนเทนเนอร์ */
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%; /* ทำให้ส่วนนี้มีความกว้างเต็มที่ */
+    max-width: 1500px; /* กำหนดความกว้างสูงสุด */
+    margin: 0 auto; /* ทำให้ส่วนนี้อยู่ตรงกลาง */
+    text-align: center;
+}
