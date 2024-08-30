@@ -16,7 +16,7 @@ classNames = ['Atlas-moth', 'Black-Grass-Caterpillar', 'Coconut-black-headed-cat
           'Oryctes-rhinoceros', 'Red cotton steiner', 'Rice-Bug', 'Stem-borer', 'The-Plain-Tiger', 'White-grub']
 
 #database
-
+#hello world
 def check_schema():
     conn = sqlite3.connect('databasev5.db')
     cursor = conn.cursor()
