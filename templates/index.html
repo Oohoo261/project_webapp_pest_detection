@@ -20,6 +20,17 @@
 
         // Initial update when the page loads
         window.onload = updateNotificationCount;
+
+        function captureImage() {
+        fetch('{{ url_for("capture") }}', { method: 'POST' })
+            .then(response => response.text())
+            .then(imagePath => {
+                alert('Image captured successfully and saved to uploads folder!');
+                console.log('Captured Image:', imagePath);
+                window.open(imagePath, '_blank'); // เปิดรูปภาพในแท็บใหม่
+            })
+            .catch(error => console.error('Error capturing image:', error));
+    }
     </script>
 </head>
 <body>
@@ -35,6 +46,7 @@
     <div class="container">
         <div class="camera-feed">
             <h1>Detection Cam</h1>
+            <button onclick="captureImage()">Capture</button>
             <div class="camera-frame">
                 <img src="{{ url_for('video_feed') }}?{{ random }}" width="1200" height="960" style="object-fit: cover;">
             </div>

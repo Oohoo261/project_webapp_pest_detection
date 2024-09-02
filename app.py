@@ -9,7 +9,7 @@ import torch
 app = Flask(__name__, template_folder="templates")
 
 # Load YOLOv5 model
-model = torch.hub.load('ultralytics/yolov5', 'custom', path='best.pt')
+model = torch.hub.load('ultralytics/yolov5', 'custom', path='best.pt', force_reload=True)
 
 classNames = ['Atlas-moth', 'Black-Grass-Caterpillar', 'Coconut-black-headed-caterpillar', 'Common cutworm', 'Cricket', 'Diamondback-moth',
          'Fall-Armyworm', 'Grasshopper', 'Green-weevil', 'Leaf-eating-caterpillar', 'Oriental-Mole-Cricket', 'Oriental-fruit-fly',
@@ -103,12 +103,6 @@ def data():
     conn.close()
     return render_template('data.html', data=rows)
 
-
-@app.route('/data')
-def data_page():
-    # หน้าแสดงข้อมูลที่ตรวจจับได้
-    return render_template('data.html')
-
 @app.route('/delete_detection', methods=['POST'])
 def delete_detection():
     detection_id = request.form.get('id')
@@ -145,7 +139,7 @@ def detect_objects(frame):
     detections = []
     for box in results.xyxy[0]:
         conf = box[4]
-        if conf >= 0.25:  # Confidence threshold
+        if conf >= 0.60:  # Confidence threshold
             detected = True
             x1, y1, x2, y2 = int(box[0]), int(box[1]), int(box[2]), int(box[3])
             cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 255), 3)
@@ -160,7 +154,10 @@ def detect_objects(frame):
             insert_detection(class_name, conf, timestamp)  # Removed true_positive and false_positive
     return frame, detections
 
+current_frame = None  # ตัวแปร global สำหรับเก็บเฟรมปัจจุบัน
+
 def generate_frames():
+    global current_frame
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("Error: Could not open video stream or file")
@@ -171,15 +168,29 @@ def generate_frames():
         if not success:
             break
         else:
-            frame, _ = detect_objects(frame)  # Get only the frame, ignoring detections here
+            current_frame = frame  # เก็บเฟรมปัจจุบันลงในตัวแปร global
+            frame, _ = detect_objects(frame)  # ตรวจจับวัตถุในเฟรม
             ret, buffer = cv2.imencode('.jpg', frame)
             if not ret:
                 continue
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-    
+
     cap.release()
+
+@app.route('/capture', methods=['POST'])
+def capture():
+    global current_frame
+    if current_frame is not None:
+        # บันทึกภาพที่จับได้ลงในโฟลเดอร์ uploads
+        timestamp = time.strftime('%Y%m%d-%H%M%S')
+        image_path = os.path.join('static', f'capture_{timestamp}.jpg')
+        cv2.imwrite(image_path, current_frame)  # บันทึกเฟรมปัจจุบันเป็นไฟล์ภาพ
+        return image_path, 200
+    else:
+        return 'Error: No frame captured', 500
+
 
 
 @app.route('/')
