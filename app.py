@@ -139,7 +139,7 @@ def detect_objects(frame):
     detections = []
     for box in results.xyxy[0]:
         conf = box[4]
-        if conf >= 0.60:  # Confidence threshold
+        if conf >= 0.50:  # Confidence threshold
             detected = True
             x1, y1, x2, y2 = int(box[0]), int(box[1]), int(box[2]), int(box[3])
             cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 255), 3)
@@ -215,20 +215,45 @@ def analyze_image(image_path):
     
     return detected_image_path, detections
 
+def analyze_image_with_resize(image_path):
+    frame = cv2.imread(image_path)
+    
+    # Resize the image to 640 width while maintaining the aspect ratio
+    height, width = frame.shape[:2]
+    new_width = 640
+    new_height = int(height * (new_width / width))
+    resized_frame = cv2.resize(frame, (new_width, new_height))
+    
+    frame, detections = detect_objects(resized_frame)
+    
+    # สร้างชื่อไฟล์สำหรับภาพที่ตรวจจับแล้ว
+    detected_image_path = os.path.join('static', 'detected.jpg')
+    cv2.imwrite(detected_image_path, frame)
+    
+    # ลบภาพเดิม
+    os.remove(image_path)
+    
+    return detected_image_path, detections
+
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
         file = request.files['file']
+        resize_option = request.form.get('resize')  # ดึงค่าจากฟอร์มเพื่อดูว่าผู้ใช้เลือกปรับขนาดภาพหรือไม่
         if file:
             file_path = os.path.join('uploads', file.filename)
             file.save(file_path)
             
             # ตรวจจับและบันทึกภาพที่ตรวจจับแล้ว
-            detected_file_path, detections = analyze_image(file_path)
+            if resize_option == 'yes':
+                detected_file_path, detections = analyze_image_with_resize(file_path)
+            else:
+                detected_file_path, detections = analyze_image(file_path)
             
             return render_template('upload.html', file_path='detected.jpg', detections=detections)
     return render_template('upload.html')
+
 
 #notification
 
@@ -275,4 +300,4 @@ if __name__ == '__main__':
     update_schema()    # Update the schema
     if not os.path.exists('uploads'):
         os.makedirs('uploads')
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)

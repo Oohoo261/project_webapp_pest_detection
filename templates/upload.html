@@ -66,7 +66,8 @@
             <h1>Upload Image</h1>
             <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
                 <input type="file" name="file" accept="image/*,video/*" required onchange="previewFile()">
-                <button type="submit">Upload</button>
+                <button type="submit" name="resize" value="yes">Upload and Resize</button> <!-- ปุ่มสำหรับอัปโหลดพร้อมปรับขนาด -->
+                <button type="submit" name="resize" value="no">Upload without Resize</button> <!-- ปุ่มสำหรับอัปโหลดโดยไม่ปรับขนาด -->
             </form>
             <div id="preview-container">
                 <h2>Preview:</h2>
