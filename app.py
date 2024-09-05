@@ -1,102 +1,19 @@
-import cv2
-import math
 import os
 import sqlite3
 import time
 from flask import Flask, render_template, Response, request, redirect, url_for
-import torch
+from image_detect import analyze_image, analyze_image_with_resize
+from detect import generate_frames
+from shared import create_database, update_schema, fetch_data_from_database, update_pest_schema, create_pest_database, DATABASE_PATH, PEST_DATABASE_PATH
+from shared_image import create_image_database, update_image_schema, fetch_image_data_from_database, IMAGE_DATABASE_PATH
 
 app = Flask(__name__, template_folder="templates")
 
-# Load YOLOv5 model
-model = torch.hub.load('ultralytics/yolov5', 'custom', path='best.pt', force_reload=True)
-
-classNames = ['Atlas-moth', 'Black-Grass-Caterpillar', 'Coconut-black-headed-caterpillar', 'Common cutworm', 'Cricket', 'Diamondback-moth',
-         'Fall-Armyworm', 'Grasshopper', 'Green-weevil', 'Leaf-eating-caterpillar', 'Oriental-Mole-Cricket', 'Oriental-fruit-fly',
-          'Oryctes-rhinoceros', 'Red cotton steiner', 'Rice-Bug', 'Stem-borer', 'The-Plain-Tiger', 'White-grub']
-
-#database
-
-def check_schema():
-    conn = sqlite3.connect('databasev5.db')
-    cursor = conn.cursor()
-    cursor.execute("PRAGMA table_info(detections)")
-    columns = cursor.fetchall()
-    conn.close()
-    for column in columns:
-        print(column)
-
-def update_schema():
-    conn = sqlite3.connect('databasev5.db')
-    cursor = conn.cursor()
-    
-    # Check if the old table exists
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='detections'")
-    if cursor.fetchone() is None:
-        print("Table 'detections' does not exist. Skipping schema update.")
-        conn.close()
-        return
-    
-    # Create a new table with the updated schema
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS detections_new (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            confident REAL NOT NULL,
-            timestamp INTEGER NOT NULL
-        )
-    ''')
-    
-    # Copy data from the old table to the new table
-    cursor.execute('''
-        INSERT INTO detections_new (id, name, confident, timestamp)
-        SELECT id, name, confident, timestamp
-        FROM detections
-    ''')
-    
-    # Drop the old table
-    cursor.execute('DROP TABLE detections')
-    
-    # Rename the new table to the old table's name
-    cursor.execute('ALTER TABLE detections_new RENAME TO detections')
-    
-    conn.commit()
-    conn.close()
-
-def create_database():
-    conn = sqlite3.connect('databasev5.db')
-    cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS detections (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        name TEXT NOT NULL,
-                        confident REAL NOT NULL,
-                        timestamp INTEGER NOT NULL
-                      )''')
-    conn.commit()
-    conn.close()
-
-def insert_detection(name, confident, timestamp):
-    conn = sqlite3.connect('databasev5.db')
-    cursor = conn.cursor()
-    current_timestamp = time.strftime('%H:%M:%S')  # Format time as hours:minutes:seconds
-    cursor.execute("INSERT INTO detections (name, confident, timestamp) VALUES (?, ?, ?)",
-                   (name, confident, current_timestamp))
-    conn.commit()
-    conn.close()
-
-def fetch_data_from_database():
-    conn = sqlite3.connect('databasev5.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM detections")
-    data = cursor.fetchall()
-    conn.close()
-    return data
-
-create_database()
+#data.html
 
 @app.route('/data')
 def data():
-    conn = sqlite3.connect('databasev5.db')
+    conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM detections")
     rows = cursor.fetchall()
@@ -112,7 +29,7 @@ def delete_detection():
     return 'Error', 400
 
 def delete_detection_by_id(detection_id):
-    conn = sqlite3.connect('databasev5.db')
+    conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute("DELETE FROM detections WHERE id = ?", (detection_id,))
     conn.commit()
@@ -121,7 +38,7 @@ def delete_detection_by_id(detection_id):
 @app.route('/delete_all_detections', methods=['POST'])
 def delete_all_detections():
     try:
-        conn = sqlite3.connect('databasev5.db')
+        conn = sqlite3.connect(DATABASE_PATH)
         cursor = conn.cursor()
         cursor.execute("DELETE FROM detections")  # ลบข้อมูลทั้งหมดในตาราง
         conn.commit()
@@ -130,68 +47,53 @@ def delete_all_detections():
     except Exception as e:
         return f"An error occurred: {e}", 500
 
-#camera object detect
+#data_image
 
-def detect_objects(frame):
-    results = model(frame)
-    timestamp = time.strftime('%H:%M:%S')
-    detected = False
-    detections = []
-    for box in results.xyxy[0]:
-        conf = box[4]
-        if conf >= 0.50:  # Confidence threshold
-            detected = True
-            x1, y1, x2, y2 = int(box[0]), int(box[1]), int(box[2]), int(box[3])
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 255), 3)
+@app.route('/data_image')
+def data_image():
+    data = fetch_image_data_from_database()
+    return render_template('data_image.html', data=data)
 
-            conf = math.ceil((conf * 100)) / 100
-            cls = int(box[5])
-            class_name = classNames[cls]
-            label = f'{class_name} {conf}'
-            cv2.putText(frame, label, (x1, y1 - 2), 0, 1, [255, 255, 255], thickness=1, lineType=cv2.LINE_AA)
-            detections.append((class_name, conf, timestamp))
+@app.route('/delete_image_detection', methods=['POST'])
+def delete_image_detection():
+    detection_id = request.form.get('id')
+    if detection_id:
+        delete_image_detection_by_id(detection_id)
+        return redirect(url_for('data_image'))
+    return 'Error', 400
 
-            insert_detection(class_name, conf, timestamp)  # Removed true_positive and false_positive
-    return frame, detections
+def delete_image_detection_by_id(detection_id):
+    conn = sqlite3.connect(IMAGE_DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM image_detections WHERE id = ?", (detection_id,))
+    conn.commit()
+    conn.close()
 
-current_frame = None  # ตัวแปร global สำหรับเก็บเฟรมปัจจุบัน
+@app.route('/delete_all_image_detections', methods=['POST'])
+def delete_all_image_detections():
+    try:
+        conn = sqlite3.connect(IMAGE_DATABASE_PATH)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM image_detections")  # Delete all records
+        conn.commit()
+        conn.close()
+        return redirect(url_for('data_image'))  # Redirect to the data page
+    except Exception as e:
+        return f"An error occurred: {e}", 500
+    
+#data_pest.html
 
-def generate_frames():
-    global current_frame
-    cap = cv2.VideoCapture(0)
-    if not cap.isOpened():
-        print("Error: Could not open video stream or file")
-        return
-
-    while True:
-        success, frame = cap.read()
-        if not success:
-            break
-        else:
-            current_frame = frame  # เก็บเฟรมปัจจุบันลงในตัวแปร global
-            frame, _ = detect_objects(frame)  # ตรวจจับวัตถุในเฟรม
-            ret, buffer = cv2.imencode('.jpg', frame)
-            if not ret:
-                continue
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-
-    cap.release()
-
-@app.route('/capture', methods=['POST'])
-def capture():
-    global current_frame
-    if current_frame is not None:
-        # บันทึกภาพที่จับได้ลงในโฟลเดอร์ uploads
-        timestamp = time.strftime('%Y%m%d-%H%M%S')
-        image_path = os.path.join('static', f'capture_{timestamp}.jpg')
-        cv2.imwrite(image_path, current_frame)  # บันทึกเฟรมปัจจุบันเป็นไฟล์ภาพ
-        return image_path, 200
-    else:
-        return 'Error: No frame captured', 500
+@app.route('/pest_data')
+def pest_data():
+    conn = sqlite3.connect(PEST_DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM pests")
+    rows = cursor.fetchall()
+    conn.close()
+    return render_template('pest_data.html', data=rows)
 
 
+#index.html
 
 @app.route('/')
 def index():
@@ -200,41 +102,10 @@ def index():
 
 @app.route('/video_feed')
 def video_feed():
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    camera_index = int(request.args.get('camera_index', 0))  # รับ camera_index จาก query parameter
+    return Response(generate_frames(camera_index), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-def analyze_image(image_path):
-    frame = cv2.imread(image_path)
-    frame, detections = detect_objects(frame)
-    
-    # สร้างชื่อไฟล์สำหรับภาพที่ตรวจจับแล้ว
-    detected_image_path = os.path.join('static', 'detected.jpg')
-    cv2.imwrite(detected_image_path, frame)
-    
-    # ลบภาพเดิม
-    os.remove(image_path)
-    
-    return detected_image_path, detections
-
-def analyze_image_with_resize(image_path):
-    frame = cv2.imread(image_path)
-    
-    # Resize the image to 640 width while maintaining the aspect ratio
-    height, width = frame.shape[:2]
-    new_width = 640
-    new_height = int(height * (new_width / width))
-    resized_frame = cv2.resize(frame, (new_width, new_height))
-    
-    frame, detections = detect_objects(resized_frame)
-    
-    # สร้างชื่อไฟล์สำหรับภาพที่ตรวจจับแล้ว
-    detected_image_path = os.path.join('static', 'detected.jpg')
-    cv2.imwrite(detected_image_path, frame)
-    
-    # ลบภาพเดิม
-    os.remove(image_path)
-    
-    return detected_image_path, detections
-
+#upload.html
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
@@ -255,11 +126,11 @@ def upload():
     return render_template('upload.html')
 
 
-#notification
+#notification.html
 
 @app.route('/notification_count')
 def notification_count():
-    conn = sqlite3.connect('databasev5.db')
+    conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute('SELECT COUNT(*) FROM detections')
     count = cursor.fetchone()[0]
@@ -272,7 +143,7 @@ def notifications():
     return render_template('notifications.html', notifications=notifications)
 
 def fetch_notifications():
-    conn = sqlite3.connect('databasev5.db')
+    conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT id, name, confident, timestamp FROM detections ORDER BY timestamp DESC")
     notifications = cursor.fetchall()
@@ -289,15 +160,21 @@ def mark_read():
 
 def mark_notification_as_read(notification_id):
     # สมมุติว่าฟังก์ชันนี้จะทำเครื่องหมายการแจ้งเตือนว่าอ่านแล้ว
-    conn = sqlite3.connect('databasev5.db')
+    conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute("DELETE FROM detections WHERE id = ?", (notification_id,))
     conn.commit()
     conn.close()
 
 if __name__ == '__main__':
+    if not os.path.exists('database'):
+        os.makedirs('database')
     create_database()  # Ensure the database and table are created first
-    update_schema()    # Update the schema
+    update_schema()
+    create_image_database()  # Ensure the database and table are created first
+    update_image_schema()    # Update the schema 
+    create_pest_database()   # Ensure the pest database and table are created if not exists
+    update_pest_schema()     # Update the pest schema
     if not os.path.exists('uploads'):
         os.makedirs('uploads')
-    app.run(host="0.0.0.0", port=5000)
+    app.run(debug=True)

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pest Data</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles-data.css') }}">
+    <script>
+        function updateNotificationCount() {
+            fetch('{{ url_for("notification_count") }}')
+                .then(response => response.text())
+                .then(count => {
+                    document.getElementById('notification-count').innerText = count;
+                })
+                .catch(error => console.error('Error fetching notification count:', error));
+        }
+
+        // Update the notification count every 5 seconds
+        setInterval(updateNotificationCount, 5000);
+
+        // Initial update when the page loads
+        window.onload = updateNotificationCount;
+    </script>
+</head>
+<body>
+    <div class="navbar">
+        <a href="{{ url_for('index') }}">กล้องตรวจจับ</a>
+        <a href="{{ url_for('upload') }}">ตรวจจับด้วยรูปภาพ</a>
+        <a href="{{ url_for('pest_data') }}" class="button-color">ข้อมูลศัตรูพืช</a>
+        <a href="{{ url_for('notifications') }}" class="notification-button">
+            แจ้งเตือน (<span id="notification-count">0</span>)
+        </a>
+        <a href="https://forms.gle/gA5Q2Q9VUpmbPFDCA" target="_blank" class="button-color">แบบประเมิน</a>
+    </div>
+    <div class="container">
+        <div class="data-section">
+            <div class="header-section">
+                <h1>ข้อมูลศัตรูพืช</h1>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>ชื่ออังกฤษ</th>
+                        <th>ชื่อไทย</th>
+                        <th>คำอธิบาย</th>
+                        <th>ช่วงที่ระบาด</th>
+                        <th>พืชอาหาร</th>
+                        <th>วิธีการกำจัด</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                    <tr>
+                        <td>{{ row[0] }}</td>
+                        <td>{{ row[1] }}</td>
+                        <td>{{ row[2] }}</td>
+                        <td>{{ row[3] }}</td>
+                        <td>{{ row[4] }}</td>
+                        <td>{{ row[5] }}</td>
+                        <td>{{ row[6] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

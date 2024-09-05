@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data</title>
+    <title>Image Data</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles-data.css') }}">
     <script>
         function updateNotificationCount() {
@@ -22,7 +22,7 @@
         window.onload = updateNotificationCount;
 
         function deleteRow(id) {
-            fetch('{{ url_for("delete_detection") }}', {
+            fetch('{{ url_for("delete_image_detection") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -44,19 +44,19 @@
     <div class="navbar">
         <a href="{{ url_for('index') }}">กล้องตรวจจับ</a>
         <a href="{{ url_for('upload') }}">ตรวจจับด้วยรูปภาพ</a>
-        <a href="{{ url_for('data') }}" class="button-color">ข้อมูลที่ตรวจจับ</a>
+        <a href="{{ url_for('data_image') }}" class="button-color">ข้อมูลภาพที่ตรวจจับ</a>
         <a href="{{ url_for('pest_data') }}">ข้อมูลศัตรูพืช</a>
         <a href="{{ url_for('notifications') }}" class="notification-button">
             แจ้งเตือน (<span id="notification-count">0</span>)
         </a>
-        <a href="https://forms.gle/gA5Q2Q9VUpmbPFDCA" target="_blank" class="button-color">แบบประเมิน</a> <!-- ปุ่มแบบประเมิน -->
+        <a href="https://forms.gle/gA5Q2Q9VUpmbPFDCA" target="_blank" class="button-color">แบบประเมิน</a>
     </div>
     <div class="container">
         <div class="data-section">
             <div class="header-section">
-                <h1>ข้อมูลที่ตรวจจับ</h1>
+                <h1>ข้อมูลภาพที่ตรวจจับ</h1>
                 <!-- Delete All button -->
-                <form action="{{ url_for('delete_all_detections') }}" method="POST" class="delete-all-form">
+                <form action="{{ url_for('delete_all_image_detections') }}" method="POST" class="delete-all-form">
                     <button type="submit" class="delete-button">Delete All</button>
                 </form>
             </div>
@@ -78,7 +78,7 @@
                         <td>{{ row[2] }}</td>
                         <td>{{ row[3] }}</td>
                         <td>
-                            <form action="{{ url_for('delete_detection') }}" method="POST" style="display: inline;">
+                            <form action="{{ url_for('delete_image_detection') }}" method="POST" style="display: inline;">
                                 <input type="hidden" name="id" value="{{ row[0] }}">
                                 <button type="submit" class="delete-button">Delete</button>
                             </form>

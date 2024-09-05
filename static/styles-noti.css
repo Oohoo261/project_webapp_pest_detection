@@ -181,3 +181,14 @@ body {
     margin-top: 20px;
     font-size: 18px;
 }
+
+.button-color {
+    background-color: #28a745; /* ใช้สีเขียวเดียวกับใน styles.css */
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}

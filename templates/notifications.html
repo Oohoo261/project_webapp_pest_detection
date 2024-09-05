@@ -10,16 +10,17 @@
 <body>
     <!-- Navigation bar -->
     <div class="navbar">
-        <a href="{{ url_for('index') }}" class="button-color">Real-Time Camera Detection</a>
-        <a href="{{ url_for('upload') }}">Image Detection</a>
+        <a href="{{ url_for('index') }}" class="button-color">กล้องตรวจจับ</a>
+        <a href="{{ url_for('upload') }}">ตรวจจับด้วยรูปภาพ</a>
+        <a href="{{ url_for('pest_data') }}">ข้อมูลศัตรูพืช</a>
         <a href="{{ url_for('notifications') }}" class="notification-button">
-            Notifications (<span id="notification-count">0</span>)
+            แจ้งเตือน (<span id="notification-count">0</span>)
         </a>
         <a href="https://forms.gle/gA5Q2Q9VUpmbPFDCA" target="_blank" class="button-color">แบบประเมิน</a> <!-- ปุ่มแบบประเมิน -->
     </div>
 
     <div class="container">
-        <h1>Notifications</h1>
+        <h1>แจ้งเตือน</h1>
         <div class="notifications-section">
             {% if notifications %}
             <div class="notification-container">
@@ -38,7 +39,7 @@
                 {% endfor %}
             </div>
             {% else %}
-            <p class="empty-state">No notifications.</p>
+            <p class="empty-state">ไม่มีการแจ้งเตือน</p>
             {% endif %}
         </div>
     </div>

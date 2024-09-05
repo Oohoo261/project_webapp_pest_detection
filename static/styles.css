@@ -62,20 +62,23 @@ body {
     padding: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
+    max-width: 100%; /* ทำให้กว้างเต็มที่ */
 }
 
+/* Increase the size of the camera frame */
 .camera-frame {
     border: 5px solid #4CAF50;
     border-radius: 10px;
     overflow: hidden;
     width: 100%;  
-    height: 700px; /* เพิ่มความสูงจาก 600px เป็น 700px */
+    height: 1000px; /* เพิ่มความสูงเป็น 800px */
 }
 
+/* Adjust the size of the image within the frame */
 .camera-frame img {
     width: 100%;
     height: 100%;
-    object-fit: contain; 
+    object-fit: cover; /* ปรับให้เต็มกรอบ */
 }
 
 /* Style the detections list section */

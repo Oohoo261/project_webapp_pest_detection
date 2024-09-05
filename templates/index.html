@@ -6,6 +6,8 @@
     <title>Index</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script>
+        let cameraCount = 0;
+
         function updateNotificationCount() {
             fetch('{{ url_for("notification_count") }}')
                 .then(response => response.text())
@@ -15,40 +17,75 @@
                 .catch(error => console.error('Error fetching notification count:', error));
         }
 
+        function updateCameraFeed(cameraIndex, frameId) {
+            const cameraFrame = document.getElementById(frameId);
+            cameraFrame.src = `{{ url_for('video_feed') }}?camera_index=${cameraIndex}&{{ random }}`;
+        }
+
+        function addCameraWindow() {
+            cameraCount++;
+            const frameId = `camera-frame-${cameraCount}`;
+            const selectId = `camera-select-${cameraCount}`;
+            
+            const container = document.createElement('div');
+            container.className = 'camera-feed';
+            container.innerHTML = `
+                <h1>Detection Cam ${cameraCount}</h1>
+                <label for="${selectId}">Select Camera:</label>
+                <select id="${selectId}" onchange="updateCameraFeed(this.value, '${frameId}')">
+                    <option value="0">Camera 0</option>
+                    <option value="1">Camera 1</option>
+                    <option value="2">Camera 2</option>
+                    <option value="3">Camera 3</option>
+                    <option value="4">Camera 4</option>
+                </select>
+                <div class="camera-frame">
+                    <img id="${frameId}" width="1200" height="960" style="object-fit: cover;">
+                </div>
+            `;
+            document.getElementById('cameras-container').appendChild(container);
+
+            // Set initial camera feed
+            updateCameraFeed(cameraCount - 1, frameId);
+        }
+
         // Update the notification count every 5 seconds
         setInterval(updateNotificationCount, 5000);
 
         // Initial update when the page loads
-        window.onload = updateNotificationCount;
-
-        function captureImage() {
-        fetch('{{ url_for("capture") }}', { method: 'POST' })
-            .then(response => response.text())
-            .then(imagePath => {
-                alert('Image captured successfully and saved to uploads folder!');
-                console.log('Captured Image:', imagePath);
-                window.open(imagePath, '_blank'); // เปิดรูปภาพในแท็บใหม่
-            })
-            .catch(error => console.error('Error capturing image:', error));
-    }
+        window.onload = function() {
+            updateNotificationCount();
+        };
     </script>
 </head>
 <body>
     <div class="navbar">
-        <a href="{{ url_for('index') }}" class="button-color">Real-Time Camera Detection</a>
-        <a href="{{ url_for('upload') }}">Image Detection</a>
-        <a href="{{ url_for('data') }}">View Data Detected</a>
+        <a href="{{ url_for('index') }}" class="button-color">กล้องตรวจจับ</a>
+        <a href="{{ url_for('upload') }}">ตรวจจับด้วยรูปภาพ</a>
+        <a href="{{ url_for('data') }}">ข้อมูลที่ตรวจจับ</a>
+        <a href="{{ url_for('pest_data') }}">ข้อมูลศัตรูพืช</a>
         <a href="{{ url_for('notifications') }}" class="notification-button">
-            Notifications (<span id="notification-count">0</span>)
+            แจ้งเตือน (<span id="notification-count">0</span>)
         </a>
-        <a href="https://forms.gle/gA5Q2Q9VUpmbPFDCA" target="_blank" class="button-color">แบบประเมิน</a> <!-- ปุ่มแบบประเมิน -->
+        <a href="https://forms.gle/gA5Q2Q9VUpmbPFDCA" target="_blank" class="button-color">แบบประเมิน</a>
     </div>
     <div class="container">
-        <div class="camera-feed">
-            <h1>Detection Cam</h1>
-            <button onclick="captureImage()">Capture</button>
-            <div class="camera-frame">
-                <img src="{{ url_for('video_feed') }}?{{ random }}" width="1200" height="960" style="object-fit: cover;">
+        <button onclick="addCameraWindow()">Add Camera</button>
+        <div id="cameras-container">
+            <!-- Initial camera window -->
+            <div class="camera-feed">
+                <h1>กล้องที่ 0</h1>
+                <label for="camera-select-0">Select Camera:</label>
+                <select id="camera-select-0" onchange="updateCameraFeed(this.value, 'camera-frame-0')">
+                    <option value="0">Camera 0</option>
+                    <option value="1">Camera 1</option>
+                    <option value="2">Camera 2</option>
+                    <option value="3">Camera 3</option>
+                    <option value="4">Camera 4</option>
+                </select>
+                <div class="camera-frame">
+                    <img id="camera-frame-0" width="1200" height="960" style="object-fit: cover;">
+                </div>
             </div>
         </div>
         <div class="detections-list">
