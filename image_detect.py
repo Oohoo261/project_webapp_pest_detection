@@ -2,7 +2,7 @@ import cv2
 import os
 import math
 import time
-from shared_image import classNames, insert_image_detection, model
+from shared import classNames, insert_image_detection, model
 
 # ฟังก์ชันสำหรับตรวจจับวัตถุในรูปภาพ
 def detect_objects(frame):

@@ -4,8 +4,7 @@ import time
 from flask import Flask, render_template, Response, request, redirect, url_for
 from image_detect import analyze_image, analyze_image_with_resize
 from detect import generate_frames
-from shared import create_database, update_schema, fetch_data_from_database, update_pest_schema, create_pest_database, DATABASE_PATH, PEST_DATABASE_PATH
-from shared_image import create_image_database, update_image_schema, fetch_image_data_from_database, IMAGE_DATABASE_PATH
+from shared import create_database, update_schema, fetch_data_from_database, update_pest_schema, create_pest_database, create_image_database, update_image_schema, fetch_image_data_from_database, DATABASE_PATH
 
 app = Flask(__name__, template_folder="templates")
 
@@ -15,7 +14,12 @@ app = Flask(__name__, template_folder="templates")
 def data():
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM detections")
+    query = '''
+        SELECT detections.id, pests.name_thai, detections.name, detections.confident, detections.timestamp, pests.control_methods
+        FROM detections
+        JOIN pests ON detections.name = pests.name
+    '''
+    cursor.execute(query)
     rows = cursor.fetchall()
     conn.close()
     return render_template('data.html', data=rows)
@@ -51,8 +55,17 @@ def delete_all_detections():
 
 @app.route('/data_image')
 def data_image():
-    data = fetch_image_data_from_database()
-    return render_template('data_image.html', data=data)
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    query = '''
+        SELECT image_detections.id, pests.name_thai, image_detections.name, image_detections.confidence, image_detections.timestamp, pests.control_methods
+        FROM image_detections
+        JOIN pests ON image_detections.name = pests.name
+    '''
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    conn.close()
+    return render_template('data_image.html', data=rows)
 
 @app.route('/delete_image_detection', methods=['POST'])
 def delete_image_detection():
@@ -63,7 +76,7 @@ def delete_image_detection():
     return 'Error', 400
 
 def delete_image_detection_by_id(detection_id):
-    conn = sqlite3.connect(IMAGE_DATABASE_PATH)
+    conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute("DELETE FROM image_detections WHERE id = ?", (detection_id,))
     conn.commit()
@@ -72,7 +85,7 @@ def delete_image_detection_by_id(detection_id):
 @app.route('/delete_all_image_detections', methods=['POST'])
 def delete_all_image_detections():
     try:
-        conn = sqlite3.connect(IMAGE_DATABASE_PATH)
+        conn = sqlite3.connect(DATABASE_PATH)
         cursor = conn.cursor()
         cursor.execute("DELETE FROM image_detections")  # Delete all records
         conn.commit()
@@ -85,7 +98,7 @@ def delete_all_image_detections():
 
 @app.route('/pest_data')
 def pest_data():
-    conn = sqlite3.connect(PEST_DATABASE_PATH)
+    conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM pests")
     rows = cursor.fetchall()

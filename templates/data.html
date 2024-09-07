@@ -64,9 +64,11 @@
                 <thead>
                     <tr>
                         <th>ID</th>
+                        <th>ชื่อไทย</th>
                         <th>ชื่อ</th>
                         <th>เปอร์เซ็นความมั่นใจ</th>
                         <th>เวลาที่ตรวจจับ</th>
+                        <th>วิธีกำจัด</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -77,6 +79,8 @@
                         <td>{{ row[1] }}</td>
                         <td>{{ row[2] }}</td>
                         <td>{{ row[3] }}</td>
+                        <td>{{ row[4] }}</td>
+                        <td>{{ row[5] }}</td>
                         <td>
                             <form action="{{ url_for('delete_detection') }}" method="POST" style="display: inline;">
                                 <input type="hidden" name="id" value="{{ row[0] }}">

@@ -47,5 +47,3 @@ def generate_frames(camera_index=0):
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
     
     cap.release()
-
-

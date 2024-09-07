@@ -30,7 +30,7 @@
             const container = document.createElement('div');
             container.className = 'camera-feed';
             container.innerHTML = `
-                <h1>Detection Cam ${cameraCount}</h1>
+                <h1>กล้องที่ ${cameraCount}</h1>
                 <label for="${selectId}">Select Camera:</label>
                 <select id="${selectId}" onchange="updateCameraFeed(this.value, '${frameId}')">
                     <option value="0">Camera 0</option>
