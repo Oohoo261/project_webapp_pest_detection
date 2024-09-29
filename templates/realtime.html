@@ -40,13 +40,34 @@
                     <option value="4">Camera 4</option>
                 </select>
                 <div class="camera-frame">
-                    <img id="${frameId}" width="1200" height="960" style="object-fit: cover;">
+                    <img id="${frameId}" width="1300" height="960" style="object-fit: cover;">
                 </div>
             `;
             document.getElementById('cameras-container').appendChild(container);
 
             // Set initial camera feed
             updateCameraFeed(cameraCount - 1, frameId);
+        }
+
+        function refreshDetections() {
+            fetch('{{ url_for("get_detections") }}')
+                .then(response => response.json())
+                .then(data => {
+                    const detectionsList = document.querySelector('.detections-table ul');
+                    detectionsList.innerHTML = ''; // Clear the existing list
+
+                    data.detections.forEach(detection => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <span class="detection-name">${detection[1]}</span> - 
+                            <span class="confidence">Confidence: ${detection[2]}</span> - 
+                            <span class="timestamp">Timestamp: ${detection[3]}</span> - 
+                            <span class="camera-index">Camera: ${detection[4]}</span>
+                        `;
+                        detectionsList.appendChild(li);
+                    });
+                })
+                .catch(error => console.error('Error fetching detections:', error));
         }
 
         // Update the notification count every 5 seconds
@@ -60,17 +81,16 @@
 </head>
 <body>
     <div class="navbar">
-        <a href="{{ url_for('index') }}" class="button-color">กล้องตรวจจับ</a>
+        <a href="{{ url_for('realtime') }}" class="button-color">กล้องตรวจจับ</a>
         <a href="{{ url_for('upload') }}">ตรวจจับด้วยรูปภาพ</a>
         <a href="{{ url_for('data') }}">ข้อมูลที่ตรวจจับ</a>
         <a href="{{ url_for('pest_data') }}">ข้อมูลศัตรูพืช</a>
         <a href="{{ url_for('notifications') }}" class="notification-button">
             แจ้งเตือน (<span id="notification-count">0</span>)
         </a>
-        <a href="https://forms.gle/gA5Q2Q9VUpmbPFDCA" target="_blank" class="button-color">แบบประเมิน</a>
+        <a href="https://forms.gle/JkTiWLBvBV1hrULm6" target="_blank" class="button-color">แบบประเมิน</a>
     </div>
     <div class="container">
-        <button onclick="addCameraWindow()">Add Camera</button>
         <div id="cameras-container">
             <!-- Initial camera window -->
             <div class="camera-feed">
@@ -84,11 +104,13 @@
                     <option value="4">Camera 4</option>
                 </select>
                 <div class="camera-frame">
-                    <img id="camera-frame-0" width="1200" height="960" style="object-fit: cover;">
+                    <img id="camera-frame-0" width="1300" height="960" style="object-fit: cover;">
                 </div>
             </div>
         </div>
         <div class="detections-list">
+            <button onclick="refreshDetections()">รีเฟรช</button>
+            <button onclick="addCameraWindow()">เพิ่มกล้อง</button>
             <h2>Detections:</h2>
             <div class="detections-table">
                 <ul>
@@ -96,7 +118,8 @@
                     <li>
                         <span class="detection-name">{{ detection[1] }}</span> - 
                         <span class="confidence">Confidence: {{ detection[2] }}</span> - 
-                        <span class="timestamp">Timestamp: {{ detection[3] }}</span>
+                        <span class="timestamp">Timestamp: {{ detection[3] }}</span> - 
+                        <span class="camera-index">Camera: {{ detection[4] }}</span>
                     </li>
                     {% endfor %}
                 </ul>

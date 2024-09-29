@@ -42,14 +42,14 @@
 </head>
 <body>
     <div class="navbar">
-        <a href="{{ url_for('index') }}">กล้องตรวจจับ</a>
+        <a href="{{ url_for('realtime') }}">กล้องตรวจจับ</a>
         <a href="{{ url_for('upload') }}">ตรวจจับด้วยรูปภาพ</a>
         <a href="{{ url_for('data') }}" class="button-color">ข้อมูลที่ตรวจจับ</a>
         <a href="{{ url_for('pest_data') }}">ข้อมูลศัตรูพืช</a>
         <a href="{{ url_for('notifications') }}" class="notification-button">
             แจ้งเตือน (<span id="notification-count">0</span>)
         </a>
-        <a href="https://forms.gle/gA5Q2Q9VUpmbPFDCA" target="_blank" class="button-color">แบบประเมิน</a> <!-- ปุ่มแบบประเมิน -->
+        <a href="https://forms.gle/JkTiWLBvBV1hrULm6" target="_blank" class="button-color">แบบประเมิน</a> <!-- ปุ่มแบบประเมิน -->
     </div>
     <div class="container">
         <div class="data-section">
@@ -69,6 +69,7 @@
                         <th>เปอร์เซ็นความมั่นใจ</th>
                         <th>เวลาที่ตรวจจับ</th>
                         <th>วิธีกำจัด</th>
+                        <th>กล้องที่ตรวจจับ</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -81,6 +82,7 @@
                         <td>{{ row[3] }}</td>
                         <td>{{ row[4] }}</td>
                         <td>{{ row[5] }}</td>
+                        <td>{{ row[6] }}</td>
                         <td>
                             <form action="{{ url_for('delete_detection') }}" method="POST" style="display: inline;">
                                 <input type="hidden" name="id" value="{{ row[0] }}">

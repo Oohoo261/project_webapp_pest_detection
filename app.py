@@ -1,10 +1,10 @@
 import os
 import sqlite3
 import time
-from flask import Flask, render_template, Response, request, redirect, url_for
+from flask import Flask, jsonify, render_template, Response, request, redirect, url_for
 from image_detect import analyze_image, analyze_image_with_resize
 from detect import generate_frames
-from shared import create_database, update_schema, fetch_data_from_database, update_pest_schema, create_pest_database, create_image_database, update_image_schema, fetch_image_data_from_database, DATABASE_PATH
+from shared import create_database, update_schema, fetch_data_from_database, update_pest_schema, create_pest_database, create_image_database, DATABASE_PATH
 
 app = Flask(__name__, template_folder="templates")
 
@@ -15,7 +15,7 @@ def data():
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     query = '''
-        SELECT detections.id, pests.name_thai, detections.name, detections.confident, detections.timestamp, pests.control_methods
+        SELECT detections.id, pests.name_thai, detections.name, detections.confident, detections.timestamp, pests.control_methods, detections.camera_index
         FROM detections
         JOIN pests ON detections.name = pests.name
     '''
@@ -45,6 +45,7 @@ def delete_all_detections():
         conn = sqlite3.connect(DATABASE_PATH)
         cursor = conn.cursor()
         cursor.execute("DELETE FROM detections")  # ลบข้อมูลทั้งหมดในตาราง
+        cursor.execute("DELETE FROM sqlite_sequence WHERE name='detections'")  # รีเซ็ตลำดับ ID
         conn.commit()
         conn.close()
         return redirect(url_for('data'))  # กลับไปยังหน้าข้อมูลหลังจากลบเสร็จ
@@ -88,6 +89,7 @@ def delete_all_image_detections():
         conn = sqlite3.connect(DATABASE_PATH)
         cursor = conn.cursor()
         cursor.execute("DELETE FROM image_detections")  # Delete all records
+        cursor.execute("DELETE FROM sqlite_sequence WHERE name='image_detections'")  # รีเซ็ตลำดับ ID
         conn.commit()
         conn.close()
         return redirect(url_for('data_image'))  # Redirect to the data page
@@ -109,14 +111,24 @@ def pest_data():
 #index.html
 
 @app.route('/')
-def index():
+def realtime():
     data = fetch_data_from_database()
-    return render_template('index.html', random=time.time(), detections=data)
+    return render_template('realtime.html', random=time.time(), detections=data)
 
 @app.route('/video_feed')
 def video_feed():
     camera_index = int(request.args.get('camera_index', 0))  # รับ camera_index จาก query parameter
     return Response(generate_frames(camera_index), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/get_detections', methods=['GET'])
+def get_detections():
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM detections ORDER BY timestamp DESC")
+    detections = cursor.fetchall()
+    conn.close()
+    return jsonify(detections=detections)
+
 
 #upload.html
 
@@ -179,13 +191,22 @@ def mark_notification_as_read(notification_id):
     conn.commit()
     conn.close()
 
+
+
+
+
+
+
+
+
+
+
 if __name__ == '__main__':
     if not os.path.exists('database'):
         os.makedirs('database')
     create_database()  # Ensure the database and table are created first
     update_schema()
     create_image_database()  # Ensure the database and table are created first
-    update_image_schema()    # Update the schema 
     create_pest_database()   # Ensure the pest database and table are created if not exists
     update_pest_schema()     # Update the pest schema
     if not os.path.exists('uploads'):

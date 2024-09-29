@@ -96,7 +96,7 @@ body {
 }
 
 .detections-table {
-    max-height: 700px; /* เพิ่มความสูงจากเดิม 400px เป็น 600px */
+    max-height: auto; /* เพิ่มความสูงจากเดิม 400px เป็น 600px */
     overflow-y: auto;  /* ยังคงการเลื่อนสำหรับข้อมูลที่เกิน */
 }
 

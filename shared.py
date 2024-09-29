@@ -25,13 +25,14 @@ def create_database():
     conn.commit()
     conn.close()
 
-def insert_detection(name, confident, timestamp):
+def insert_detection(name, confident, timestamp, camera_index):
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     current_timestamp = time.strftime('%H:%M:%S')  # Format time as hours:minutes:seconds
-    cursor.execute("INSERT INTO detections (name, confident, timestamp) VALUES (?, ?, ?)",
-                   (name, confident, current_timestamp))
+    cursor.execute("INSERT INTO detections (name, confident, timestamp, camera_index) VALUES (?, ?, ?, ?)",
+                   (name, confident, current_timestamp, camera_index))
     conn.commit()
+    conn.close()
 
 
 def fetch_data_from_database():
@@ -52,21 +53,22 @@ def update_schema():
         print("Table 'detections' does not exist. Skipping schema update.")
         conn.close()
         return
-    
+
     # Create a new table with the updated schema
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS detections_new (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             confident REAL NOT NULL,
-            timestamp INTEGER NOT NULL
+            timestamp INTEGER NOT NULL,
+            camera_index INTEGER NOT NULL
         )
     ''')
     
     # Copy data from the old table to the new table
     cursor.execute('''
-        INSERT INTO detections_new (id, name, confident, timestamp)
-        SELECT id, name, confident, timestamp
+        INSERT INTO detections_new (id, name, confident, timestamp, camera_index)
+        SELECT id, name, confident, timestamp, 0  -- Default value for camera_index
         FROM detections
     ''')
     
@@ -90,8 +92,6 @@ def create_pest_database():
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS pests (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                english_name TEXT NOT NULL,
-                thai_name TEXT,
                 description TEXT,
                 outbreak_period TEXT,
                 food_plants TEXT,
@@ -116,8 +116,6 @@ def update_pest_schema():
 
     try:
         # เพิ่มคอลัมน์ใหม่ถ้ายังไม่มีอยู่
-        cursor.execute("ALTER TABLE pests ADD COLUMN english_name TEXT")
-        cursor.execute("ALTER TABLE pests ADD COLUMN thai_name TEXT")
         cursor.execute("ALTER TABLE pests ADD COLUMN description TEXT")
         cursor.execute("ALTER TABLE pests ADD COLUMN outbreak_period TEXT")
         cursor.execute("ALTER TABLE pests ADD COLUMN food_plants TEXT")
@@ -153,47 +151,6 @@ def insert_image_detection(name, confidence, timestamp):
     conn.commit()
     conn.close()
 
-def fetch_image_data_from_database():
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM image_detections")
-    data = cursor.fetchall()
-    conn.close()
-    return data
 
-def update_image_schema():
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-    
-    # Check if the old table exists
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='detections'")
-    if cursor.fetchone() is None:
-        print("Table 'detections' does not exist. Skipping schema update.")
-        conn.close()
-        return
-    
-    # Create a new table with the updated schema
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS detections_new (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            confident REAL NOT NULL,
-            timestamp INTEGER NOT NULL
-        )
-    ''')
-    
-    # Copy data from the old table to the new table
-    cursor.execute('''
-        INSERT INTO detections_new (id, name, confident, timestamp)
-        SELECT id, name, confident, timestamp
-        FROM detections
-    ''')
-    
-    # Drop the old table
-    cursor.execute('DROP TABLE detections')
-    
-    # Rename the new table to the old table's name
-    cursor.execute('ALTER TABLE detections_new RENAME TO detections')
-    
-    conn.commit()
-    conn.close()
+
+

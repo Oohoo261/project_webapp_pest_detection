@@ -12,7 +12,7 @@ def detect_objects(frame):
     detections = []
     for box in results.xyxy[0]:
         conf = box[4]
-        if conf >= 0.50:  # Confidence threshold
+        if conf >= 0.5000:  # Confidence threshold
             detected = True
             x1, y1, x2, y2 = int(box[0]), int(box[1]), int(box[2]), int(box[3])
             cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 255), 3)
